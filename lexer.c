@@ -1,5 +1,6 @@
-
+// Authors: Vincent Lazo and Christian Manuel
 #include "lexer.h"
+#include "lexer_output.c"
 
 extern FILE * fp;
 
@@ -36,13 +37,17 @@ extern bool lexer_done()
 }
 
 // Requires: !lexer_done()
-// Return the next token in the input file,
-// advancing in the input
+// Return the next token in the input file, advancing in the input
 extern token lexer_next()
 {
     if (!lexer_done())
     {
-        return;
+        // I'M CONFUSED IF THIS IS WHAT I'M SUPPOSED TO BE DOING, BUT I THINK WE HAVE TO POPULATE THE TOKEN FIELDS?
+        token t = calloc(1, sizeof(token));
+        // WAIT MAYBE NOT CUZ LEXER_OUTPUT FUNCTION ALREADY DOES THAT IN LEXER_OUTPUT.C
+
+        // NOT SURE WHAT RETURN SHOULD BE YET
+        return t;
     }
 }
 
@@ -52,6 +57,7 @@ extern const char *lexer_filename()
 {
      if (!lexer_done())
     {
+        // NOT SURE WHAT RETURN SHOULD BE YET
         return;
     }   
 }
@@ -62,6 +68,7 @@ extern unsigned int lexer_line()
 {
     if (!lexer_done())
     {
+        // NOT SURE WHAT RETURN SHOULD BE YET
         return;
     }
 }
@@ -72,6 +79,22 @@ extern unsigned int lexer_column()
 {
     if (!lexer_done())
     {
+        // NOT SURE WHAT RETURN SHOULD BE YET
         return;
     }    
+}
+
+// HERE WE'RE SUPPOSED TO CALL LEXER OUTPUT
+int main(int argc, char **argv)
+{
+    char * filename = argv[1];
+    lexer_open(filename);
+
+    // maybe not this, cuz it's static, just leaving it here tho
+    // lexer_print_output_header();
+    lexer_output();
+    
+
+    lexer_close();
+    return 0;
 }
