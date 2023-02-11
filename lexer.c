@@ -1,26 +1,46 @@
 // Authors: Vincent Lazo and Christian Manuel
 #include "lexer.h"
-#include "lexer_output.c"
+#include "lexer_output.h"
+#include "utilities.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 extern FILE * fp;
+// global variable for filename, not sure if theres an easier way to store the filename in order
+// to access it later
+char *file_name;
 
 // Requires: fname != NULL
 // Requires: fname is the name of a readable file
 // Initialize the lexer and start it reading from the given file name
 extern void lexer_open(const char *fname)
 {
+	int length;
+
+	// calls function from utilities.h/.c; in short, calls exit() function
     if (fname == NULL)
-        return;
+        bail_with_error(fname);
+
     fp = fopen(fname, "r");
-    // NOT SURE WHAT RETURN SHOULD BE YET
+    
+	// catches same error as before
 	if (fp == NULL)
-		return;
+		bail_with_error(fname);
+
+	length = strlen(fname);
+
+	file_name = malloc(sizeof(char) * (length + 1));
+
+	strcpy(file_name, fname);
 }
 
 // Close the file the lexer is working on
 // and make this lexer be done
 extern void lexer_close()
 {
+	free(file_name);
+
     fclose(fp);
 }
 
@@ -40,11 +60,16 @@ extern bool lexer_done()
 // Return the next token in the input file, advancing in the input
 extern token lexer_next()
 {
+	token *token_ptr;
+
     if (!lexer_done())
     {
+		token_ptr = calloc(1, sizeof(token));
+
         // I'M CONFUSED IF THIS IS WHAT I'M SUPPOSED TO BE DOING, BUT I THINK WE HAVE TO POPULATE THE TOKEN FIELDS?
-        token t = calloc(1, sizeof(token));
-        // WAIT MAYBE NOT CUZ LEXER_OUTPUT FUNCTION ALREADY DOES THAT IN LEXER_OUTPUT.C
+        token t = &token_ptr;
+        // WAIT MAYBE NOT CUZ LEXER_OUTPUT FUNCTION ALREADY DOES THAT IN LEXER_OUTPUT.C 
+		// -> it doesnt, it calls this function which we have to implement ourselves
 
         // NOT SURE WHAT RETURN SHOULD BE YET
         return t;
@@ -55,11 +80,14 @@ extern token lexer_next()
 // Return the name of the current file
 extern const char *lexer_filename()
 {
-     if (!lexer_done())
+    if (!lexer_done())
     {
-        // NOT SURE WHAT RETURN SHOULD BE YET
-        return;
-    }   
+		return file_name;
+    }
+
+// return NULL if lexer is done (can change later if deemed appropriate)
+	else
+		return NULL;
 }
 
 // Requires: !lexer_done()
