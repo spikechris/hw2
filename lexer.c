@@ -75,7 +75,7 @@ extern token lexer_next()
 
 		// read in the next keyword/ argument from the file by setting it equal to curr->text
 
-		// set curr->typ = curr->typ[curr->text]
+		// set curr->typ = curr->typ[curr->text] using the ttyp2str()
 
         // WAIT MAYBE NOT CUZ LEXER_OUTPUT FUNCTION ALREADY DOES THAT IN LEXER_OUTPUT.C 
 		// -> it doesnt, it calls this function which we have to implement ourselves
