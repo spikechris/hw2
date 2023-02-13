@@ -2,14 +2,14 @@
 #include "lexer.h"
 #include "lexer_output.h"
 #include "utilities.h"
+// #include "token.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 extern FILE * fp;
-// global variable for filename, not sure if theres an easier way to store the filename in order
-// to access it later
-char *file_name;
+// global variable for current token
+token *curr;
 
 // Requires: fname != NULL
 // Requires: fname is the name of a readable file
@@ -30,17 +30,24 @@ extern void lexer_open(const char *fname)
 
 	length = strlen(fname);
 
-	file_name = malloc(sizeof(char) * (length + 1));
+	curr = malloc(sizeof(token));
 
-	strcpy(file_name, fname);
+	curr->filename = malloc(sizeof(char) * (length + 1));
+
+	curr->text = malloc(sizeof(char) * 100);
+
+	curr->typ = malloc(sizeof(token_type));
+
+	strcpy(curr->filename, fname);
 }
 
 // Close the file the lexer is working on
 // and make this lexer be done
 extern void lexer_close()
 {
-	free(file_name);
-
+	free(curr->filename);
+	free(curr);
+	
     fclose(fp);
 }
 
@@ -53,21 +60,23 @@ extern bool lexer_done()
 		return false;
     else
         return (feof(fp));
-    
 }
 
 // Requires: !lexer_done()
 // Return the next token in the input file, advancing in the input
 extern token lexer_next()
 {
-	token *token_ptr;
-
     if (!lexer_done())
     {
 		token_ptr = calloc(1, sizeof(token));
 
         // I'M CONFUSED IF THIS IS WHAT I'M SUPPOSED TO BE DOING, BUT I THINK WE HAVE TO POPULATE THE TOKEN FIELDS?
         token t = &token_ptr;
+
+		// read in the next keyword/ argument from the file by setting it equal to curr->text
+
+		// set curr->typ = curr->typ[curr->text]
+
         // WAIT MAYBE NOT CUZ LEXER_OUTPUT FUNCTION ALREADY DOES THAT IN LEXER_OUTPUT.C 
 		// -> it doesnt, it calls this function which we have to implement ourselves
 
@@ -82,7 +91,7 @@ extern const char *lexer_filename()
 {
     if (!lexer_done())
     {
-		return file_name;
+		return curr->filename;
     }
 
 // return NULL if lexer is done (can change later if deemed appropriate)
