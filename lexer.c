@@ -6,10 +6,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 // not sure to fix errors
 // #include "utilities.c"
 // #include "lexer_output.c"
 // #include "token.c"
+
+#define deb 1
 
 // this line was giving me errors so Ima try this
 // extern FILE * fp;
@@ -92,30 +95,34 @@ void look_for_symbol()
 		fscanf(fp, "%c", &buffer[i]);
 		if (buffer[i] == ' ')
 		{
-			len = strlen(buffer) - 1;
-            curr->text = malloc((len+1)* sizeof(char));
+			buffer[i] = '\0';
+			len = strlen(buffer);
+            curr->text = malloc((len)* sizeof(char));
 
-            printf("len = %d\n", len);
+			if (deb)
+            	printf("buffer is: --%s-- \nlen = %d\n", buffer, len);
 			int k;
-			for (k = 0; k < len; k++)
+			for (k = 0; k < len+1; k++)
 			{
 				curr->text[k] = buffer[k];
 			}
-            curr->text[len] = '\0';
-            printf("Curr text is: <%s>\n", curr->text);
+            // curr->text[len] = '\0';
+			if (deb)
+	            printf("Curr text is: <%s>\n", curr->text);
 
 			break;
 		}
 		
 		else if (buffer[i] == '\n')
 		{
-			len = strlen(buffer)-3;
+			buffer[i] = '\0';
+			len = strlen(buffer);
 			int k;
-			for (k = 0; k < len; k++)
+			for (k = 0; k < len+1; k++)
 			{
 				curr->text[k] = buffer[k];
 			}
-            curr->text[k] = '\0';
+            // curr->text[k] = '\0';
             //printf("BUFFER text is: <%s>\n", buffer);
            // printf("Curr text is: <%s>\n", curr->text);
 
@@ -127,14 +134,17 @@ void look_for_symbol()
         //ADDED TO GO BACKWARDS FOR , AND ;
  		else if (buffer[i] == ',' || buffer[i] == ';')
 		{
-            fseek(fp, -1, SEEK_SET);
+			if (i > 0)
+			{				
+				ungetc(';', fp);
+			}
 			len = strlen(buffer) - 1;
 			// int k;
 			// for (k = 0; k < len-2; k++)
 			// {
 			// 	curr->text[k] = buffer[k];
 			// }
-            strcpy(curr->text, buffer);
+            // strcpy(curr->text, buffer);
             //curr->text[k] = '\0';
 
            // printf("Curr text IN THE FINAL ELSEIF is: <%s>\n", curr->text);
@@ -154,9 +164,9 @@ void look_for_symbol()
 // Return the next token in the input file, advancing in the input
 extern token lexer_next()
 {
-	char buffer[1000];
-	token ret;
-	int len = 0, i = 0, a = 0;
+	token *ret;
+	ret = malloc(sizeof(token));
+	int a = 0;
 	
 	// check for comment, if so skip to next line
 
@@ -167,11 +177,11 @@ extern token lexer_next()
 	// at this point, we have our next string without whitespace in, so we can use it to 
 	// identify what token we have
 
-	if (strcmp(curr->text, "#") == 0)
-	{
-		fgets(buffer, 1000, fp);
-		curr->line++;
-	}
+	// if (strcmp(curr->text, "#") == 0)
+	// {
+	// 	fgets(buffer, 1000, fp);
+	// 	curr->line++;
+	// }
 	
     if (1)
     {
@@ -351,19 +361,26 @@ extern token lexer_next()
                 if (a > SHRT_MAX)
                     curr->value = a;
                 curr->typ = numbersym;
+				
                 // ELSE ERROR
             }
             else
+			{
                 curr->typ = identsym;
+			}
         }
     }
     
-    ret.typ = curr->typ;
-	ret.line = curr->line;
-	ret.column = curr->column;
+	int len2 = strlen(curr->text) - 1;
+
+	ret->text = malloc (sizeof(char) * (len2 + 1));
+    ret->typ = curr->typ;
+	ret->line = curr->line;
+	ret->column = curr->column;
+	strcpy(ret->text, curr->text);
 
     //free(curr->text);
-	return ret;
+	return *ret;
 }
 
 // Requires: !lexer_done()
