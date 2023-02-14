@@ -38,9 +38,13 @@ static void lexer_print_token(token t)
 
 void lexer_output()
 {
+	int i = 0;
     lexer_print_output_header();
     while (!lexer_done())
 	{
+		//printf("Iteration: %d\n", i);
+		//i++;
+		//fflush(stdout);		
 		token t = lexer_next();
 		lexer_print_token(t);
     }

@@ -6,8 +6,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+// not sure to fix errors
+// #include "utilities.c"
+// #include "lexer_output.c"
+// #include "token.c"
 
-extern FILE * fp;
+// this line was giving me errors so Ima try this
+// extern FILE * fp;
+FILE * fp;
 // global variable for current token
 token *curr;
 
@@ -34,22 +40,31 @@ extern void lexer_open(const char *fname)
 
 	curr->filename = malloc(sizeof(char) * (length + 1));
 
-	curr->text = malloc(sizeof(char) * 100);
+	//curr->text = malloc(sizeof(char) * 100);
+    curr->text = NULL;
 
-	curr->typ = malloc(sizeof(token_type));
 
-	curr->line = 0;
-	curr->column = 0;
+	//curr->typ = malloc(sizeof(token_type));
 
-	strcpy(curr->filename, fname);
+	curr->line = 1;
+	curr->column = 1;
+
+	//strcpy(curr->filename, fname);
 }
 
 // Close the file the lexer is working on
 // and make this lexer be done
 extern void lexer_close()
 {
-	free(curr->filename);
-	free(curr);
+	if (curr != NULL)
+    {
+        if (curr->filename != NULL)
+            free(curr->filename);
+        if (curr->text != NULL)
+            free(curr->text);
+        free(curr);
+    }
+	//free(curr);
 	
     fclose(fp);
 }
@@ -65,8 +80,11 @@ extern bool lexer_done()
         return (feof(fp));
 }
 
-void look_for_symbol(char buffer[], int len, int i)
+void look_for_symbol()
 {
+    int len = 0, i = 0;
+    char buffer[1000];
+    //curr = malloc(sizeof(char));
 	// only do fseek(fp, [index], SEEK_SET); whenever we hit the next possible symbol, not for
 	// whitespace or newline
 	while (1)
@@ -74,33 +92,62 @@ void look_for_symbol(char buffer[], int len, int i)
 		fscanf(fp, "%c", &buffer[i]);
 		if (buffer[i] == ' ')
 		{
-			len = strlen(buffer);
-			
-			for (int k = 0; k < len-2; k++)
+			len = strlen(buffer) - 1;
+            curr->text = malloc((len+1)* sizeof(char));
+
+            printf("len = %d\n", len);
+			int k;
+			for (k = 0; k < len; k++)
 			{
 				curr->text[k] = buffer[k];
 			}
+            curr->text[len] = '\0';
+            printf("Curr text is: <%s>\n", curr->text);
 
 			break;
 		}
 		
 		else if (buffer[i] == '\n')
 		{
-			len = strlen(buffer);
-			
-			for (int k = 0; k < len-2; k++)
+			len = strlen(buffer)-3;
+			int k;
+			for (k = 0; k < len; k++)
 			{
 				curr->text[k] = buffer[k];
 			}
+            curr->text[k] = '\0';
+            //printf("BUFFER text is: <%s>\n", buffer);
+           // printf("Curr text is: <%s>\n", curr->text);
 
 			curr->line++;
-			curr->column = 0;
+			curr->column = 1;
 			break;
 		}
+
+        //ADDED TO GO BACKWARDS FOR , AND ;
+ 		else if (buffer[i] == ',' || buffer[i] == ';')
+		{
+            fseek(fp, -1, SEEK_SET);
+			len = strlen(buffer) - 1;
+			// int k;
+			// for (k = 0; k < len-2; k++)
+			// {
+			// 	curr->text[k] = buffer[k];
+			// }
+            strcpy(curr->text, buffer);
+            //curr->text[k] = '\0';
+
+           // printf("Curr text IN THE FINAL ELSEIF is: <%s>\n", curr->text);
+
+			//curr->line++;
+			//curr->column = 1;
+			break;
+		}       
 
 		curr->column++;
 		i++;
 	}
+
 }
 
 // Requires: !lexer_done()
@@ -109,25 +156,213 @@ extern token lexer_next()
 {
 	char buffer[1000];
 	token ret;
-	int len = 0, i = 0;
+	int len = 0, i = 0, a = 0;
 	
 	// check for comment, if so skip to next line
 
 	// go until next token can be identified
-	look_for_symbol(buffer, len, i);
+	//look_for_symbol(buffer, len, i);
+    look_for_symbol();
 
 	// at this point, we have our next string without whitespace in, so we can use it to 
 	// identify what token we have
 
-	if (strcmp(curr->text[0], "#") == 0)
+	if (strcmp(curr->text, "#") == 0)
 	{
 		fgets(buffer, 1000, fp);
 		curr->line++;
 	}
-
-	ret.typ = curr->typ;
+	
+    if (1)
+    {
+        if (strcmp(curr->text, ".") == 0) 
+        {
+            curr->typ = periodsym;
+        }
+        
+        else if (strcmp(curr->text, "const") == 0) 
+        {
+            curr->typ = constsym;
+        }
+        
+        else if (strcmp(curr->text, ";") == 0) 
+        {
+            curr->typ = semisym;
+        }
+        
+        else if (strcmp(curr->text, ",") == 0) 
+        {
+            curr->typ = commasym;
+        }
+        
+        else if (strcmp(curr->text, "var") == 0) 
+        {
+            curr->typ = varsym;
+        }
+        
+        else if (strcmp(curr->text, "procedure") == 0) 
+        {
+            curr->typ = procsym;
+        }
+        
+        else if (strcmp(curr->text, ":=") == 0) 
+        {
+            curr->typ = becomessym;
+        }
+        
+        else if (strcmp(curr->text, "call") == 0) 
+        {
+            curr->typ = callsym;
+        }
+        
+        else if (strcmp(curr->text, "begin") == 0) 
+        {
+            curr->typ = beginsym;
+        }
+        
+        else if (strcmp(curr->text, "end") == 0) 
+        {
+            curr->typ = endsym;
+        }
+        
+        else if (strcmp(curr->text, "if") == 0) 
+        {
+            curr->typ = ifsym;
+        }
+        
+        else if (strcmp(curr->text, "then") == 0) 
+        {
+            curr->typ = thensym;
+        }
+        
+        else if (strcmp(curr->text, "else") == 0) 
+        {
+            curr->typ = elsesym;
+        }
+        
+        else if (strcmp(curr->text, "while") == 0) 
+        {
+            curr->typ = whilesym;
+        }
+        
+        else if (strcmp(curr->text, "do") == 0) 
+        {
+            curr->typ = dosym;
+        }
+        
+        else if (strcmp(curr->text, "read") == 0) 
+        {
+            curr->typ = readsym;
+        }
+        
+        else if (strcmp(curr->text, "write") == 0) 
+        {
+            curr->typ = writesym;
+        }
+        
+        else if (strcmp(curr->text, "skip") == 0) 
+        {
+            curr->typ = skipsym;
+        }
+        
+        else if (strcmp(curr->text, "odd") == 0) 
+        {
+            curr->typ = oddsym;
+        }
+        
+        else if (strcmp(curr->text, "(") == 0) 
+        {
+            curr->typ = lparensym;
+        }
+        
+        else if (strcmp(curr->text, ")") == 0) 
+        {
+            curr->typ = rparensym;
+        }
+        
+        // ****
+        else if (strcmp(curr->text, ")") == 0) 
+        {
+            curr->typ = identsym;
+        }
+        
+        // WHAT TO PUT FOR HERE?
+        else if (strcmp(curr->text, ")") == 0) 
+        {
+            curr->typ = numbersym;
+        }
+        
+        else if (strcmp(curr->text, "=") == 0) 
+        {
+            curr->typ = eqsym;
+        }
+        
+        else if (strcmp(curr->text, "<>") == 0) 
+        {
+            curr->typ = neqsym;
+        }
+        
+        else if (strcmp(curr->text, "<") == 0) 
+        {
+            curr->typ = lessym;
+        }
+        
+        else if (strcmp(curr->text, "<=") == 0) 
+        {
+            curr->typ = leqsym;
+        }
+        
+        else if (strcmp(curr->text, ">") == 0) 
+        {
+            curr->typ = gtrsym;
+        }
+        
+        else if (strcmp(curr->text, ">=") == 0) 
+        {
+            curr->typ = geqsym;
+        }
+        
+        else if (strcmp(curr->text, "+") == 0) 
+        {
+            curr->typ = plussym;
+        }
+            
+        else if (strcmp(curr->text, "-") == 0) 
+        {
+            curr->typ = minussym;
+        }
+        
+        else if (strcmp(curr->text, "*") == 0) 
+        {
+            curr->typ = multsym;
+        }
+        
+        else if (strcmp(curr->text, "/") == 0) 
+        {
+            curr->typ = divsym;
+        }
+        
+        // here we assume valid string such as "ab" "12" and "3c"
+        else
+        {
+            a = atoi(curr->text);
+            if (a != 0) // CHANGED FROM NULL BUT CHANGE LATER
+            {
+                if (a > SHRT_MAX)
+                    curr->value = a;
+                curr->typ = numbersym;
+                // ELSE ERROR
+            }
+            else
+                curr->typ = identsym;
+        }
+    }
+    
+    ret.typ = curr->typ;
 	ret.line = curr->line;
 	ret.column = curr->column;
+
+    //free(curr->text);
 	return ret;
 }
 
@@ -171,12 +406,15 @@ int main(int argc, char **argv)
 {
     char * filename = argv[1];
     lexer_open(filename);
+    // printf("hi\n"); // we've reached here
 
     // maybe not this, cuz it's static, just leaving it here tho
     // lexer_print_output_header();
     lexer_output();
     
-
+    
+    //printf("after output\n");
+    fflush(stdout);
     lexer_close();
     return 0;
 }

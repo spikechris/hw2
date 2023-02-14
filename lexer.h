@@ -3,6 +3,7 @@
 #define _LEXER_H
 #include <stdbool.h>
 #include "token.h"
+#include <limits.h>
 
 // Requires: fname != NULL
 // Requires: fname is the name of a readable file
@@ -36,5 +37,6 @@ extern unsigned int lexer_line();
 extern unsigned int lexer_column();
 
 // auxiliary function in order to find the nex symbol
-void look_for_symbol(char buffer[], int len, int i);
+// void look_for_symbol(char buffer[], int len, int i);
+void look_for_symbol();
 #endif
