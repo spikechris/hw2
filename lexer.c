@@ -12,7 +12,7 @@
 // #include "lexer_output.c"
 // #include "token.c"
 
-#define deb 1
+#define deb 0
 
 // this line was giving me errors so Ima try this
 // extern FILE * fp;
@@ -93,6 +93,9 @@ void look_for_symbol()
 	while (1)
 	{
 		fscanf(fp, "%c", &buffer[i]);
+			if (deb)
+            	printf("BUFFER AT TOP is: --%s-- len = %d\n", buffer, len);
+
 		if (buffer[i] == ' ')
 		{
 			buffer[i] = '\0';
@@ -106,16 +109,21 @@ void look_for_symbol()
 			{
 				curr->text[k] = buffer[k];
 			}
+            // strcpy(curr->text, buffer);
             // curr->text[len] = '\0';
 			if (deb)
 	            printf("Curr text is: <%s>\n", curr->text);
 
+            // DELETE LATER
+            curr->column++;
 			break;
 		}
 		
 		else if (buffer[i] == '\n')
 		{
 			buffer[i] = '\0';
+			if (deb)
+            	printf("(AT NEWLINE) buffer is: --%s-- \nlen = %d\n", buffer, len);
 			len = strlen(buffer);
 			int k;
 			for (k = 0; k < len+1; k++)
@@ -124,7 +132,7 @@ void look_for_symbol()
 			}
             // curr->text[k] = '\0';
             //printf("BUFFER text is: <%s>\n", buffer);
-           // printf("Curr text is: <%s>\n", curr->text);
+            // printf("Curr text is: <%s>\n", curr->text);
 
 			curr->line++;
 			curr->column = 1;
@@ -134,11 +142,26 @@ void look_for_symbol()
         //ADDED TO GO BACKWARDS FOR , AND ;
  		else if (buffer[i] == ',' || buffer[i] == ';')
 		{
+            // means we need to get the token before that
 			if (i > 0)
 			{				
+                // in example 0, we need to get x
 				ungetc(';', fp);
+                curr->column;
+
+                buffer[i] = '\0';
+                len = strlen(buffer);  
+                strcpy(curr->text, buffer);
+
+                //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
+
+                break;
 			}
-			len = strlen(buffer) - 1;
+			len = strlen(buffer);
+            //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
+            strcpy(curr->text, buffer);
+			curr->column++;
+
 			// int k;
 			// for (k = 0; k < len-2; k++)
 			// {
@@ -166,6 +189,7 @@ extern token lexer_next()
 {
 	token *ret;
 	ret = malloc(sizeof(token));
+    ret->column = curr->column; // SHUOLD BE 0
 	int a = 0;
 	
 	// check for comment, if so skip to next line
@@ -376,7 +400,7 @@ extern token lexer_next()
 	ret->text = malloc (sizeof(char) * (len2 + 1));
     ret->typ = curr->typ;
 	ret->line = curr->line;
-	ret->column = curr->column;
+	//ret->column = curr->column;
 	strcpy(ret->text, curr->text);
 
     //free(curr->text);
