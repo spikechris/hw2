@@ -39,8 +39,9 @@ static void lexer_print_token(token t)
 void lexer_output()
 {
     lexer_print_output_header();
-    while (!lexer_done()) {
-	token t = lexer_next();
-	lexer_print_token(t);
+    while (!lexer_done())
+	{
+		token t = lexer_next();
+		lexer_print_token(t);
     }
 }

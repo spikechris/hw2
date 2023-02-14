@@ -38,6 +38,9 @@ extern void lexer_open(const char *fname)
 
 	curr->typ = malloc(sizeof(token_type));
 
+	curr->line = 0;
+	curr->column = 0;
+
 	strcpy(curr->filename, fname);
 }
 
@@ -62,27 +65,70 @@ extern bool lexer_done()
         return (feof(fp));
 }
 
+void look_for_symbol(char buffer[], int len, int i)
+{
+	// only do fseek(fp, [index], SEEK_SET); whenever we hit the next possible symbol, not for
+	// whitespace or newline
+	while (1)
+	{
+		fscanf(fp, "%c", &buffer[i]);
+		if (buffer[i] == ' ')
+		{
+			len = strlen(buffer);
+			
+			for (int k = 0; k < len-2; k++)
+			{
+				curr->text[k] = buffer[k];
+			}
+
+			break;
+		}
+		
+		else if (buffer[i] == '\n')
+		{
+			len = strlen(buffer);
+			
+			for (int k = 0; k < len-2; k++)
+			{
+				curr->text[k] = buffer[k];
+			}
+
+			curr->line++;
+			curr->column = 0;
+			break;
+		}
+
+		curr->column++;
+		i++;
+	}
+}
+
 // Requires: !lexer_done()
 // Return the next token in the input file, advancing in the input
 extern token lexer_next()
 {
-    if (!lexer_done())
-    {
-		token_ptr = calloc(1, sizeof(token));
+	char buffer[1000];
+	token ret;
+	int len = 0, i = 0;
+	
+	// check for comment, if so skip to next line
 
-        // I'M CONFUSED IF THIS IS WHAT I'M SUPPOSED TO BE DOING, BUT I THINK WE HAVE TO POPULATE THE TOKEN FIELDS?
-        token t = &token_ptr;
+	// go until next token can be identified
+	look_for_symbol(buffer, len, i);
 
-		// read in the next keyword/ argument from the file by setting it equal to curr->text
+	// at this point, we have our next string without whitespace in, so we can use it to 
+	// identify what token we have
 
-		// set curr->typ = curr->typ[curr->text] using the ttyp2str()
+	if (strcmp(curr->text[0], "#") == 0)
+	{
+		fgets(buffer, 1000, fp);
+		curr->line++;
+	}
 
-        // WAIT MAYBE NOT CUZ LEXER_OUTPUT FUNCTION ALREADY DOES THAT IN LEXER_OUTPUT.C 
-		// -> it doesnt, it calls this function which we have to implement ourselves
-
-        // NOT SURE WHAT RETURN SHOULD BE YET
-        return t;
-    }
+	ret.typ = curr->typ;
+	ret.line = curr->line;
+	ret.column = curr->column;
+	return ret;
 }
 
 // Requires: !lexer_done()
@@ -94,7 +140,7 @@ extern const char *lexer_filename()
 		return curr->filename;
     }
 
-// return NULL if lexer is done (can change later if deemed appropriate)
+	// return NULL if lexer is done (can change later if deemed appropriate)
 	else
 		return NULL;
 }
@@ -105,8 +151,7 @@ extern unsigned int lexer_line()
 {
     if (!lexer_done())
     {
-        // NOT SURE WHAT RETURN SHOULD BE YET
-        return;
+        return curr->line;
     }
 }
 
@@ -117,7 +162,7 @@ extern unsigned int lexer_column()
     if (!lexer_done())
     {
         // NOT SURE WHAT RETURN SHOULD BE YET
-        return;
+        return curr->column;
     }    
 }
 

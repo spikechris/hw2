@@ -34,4 +34,7 @@ extern unsigned int lexer_line();
 // Requires: !lexer_done()
 // Return the column number of the next token
 extern unsigned int lexer_column();
+
+// auxiliary function in order to find the nex symbol
+void look_for_symbol(char buffer[], int len, int i);
 #endif
