@@ -39,8 +39,8 @@ extern void lexer_open(const char *fname)
 
 	curr->filename = malloc(sizeof(char) * (length + 1));
 
-	//curr->text = malloc(sizeof(char) * 100);
-    curr->text = NULL;
+	curr->text = malloc(sizeof(char) * 100); // I REVERSED THESE COMMENTS
+    //curr->text = NULL;
 
 
 	//curr->typ = malloc(sizeof(token_type));
@@ -121,6 +121,8 @@ void look_for_symbol()
 		
 		else if (buffer[i] == '\n')
 		{
+            if (i==0)
+                printf("i is 0\n");
             buffer[i] = '\0';
             // if (deb)
             // printf("(AT NEWLINE) buffer is: --%s-- \nlen = %d\n", buffer, len);
@@ -154,23 +156,24 @@ void look_for_symbol()
 		}
 
         //ADDED TO GO BACKWARDS FOR , AND ;
- 		else if (buffer[i] == ',' || buffer[i] == ';')
+ 		else if (buffer[i] == ',' || buffer[i] == ';' || buffer[i] == '.')
 		{
             // means we need to get the token before that
 			if (i > 0)
 			{				
                 // in example 0, we need to get x
-				ungetc(';', fp);
+				ungetc(buffer[i], fp);
                 //curr->column;
 
                 buffer[i] = '\0';
                 len = strlen(buffer);  
                 strcpy(curr->text, buffer);
 
-                //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
+                //printf("IN I>0 i is %d, len = %d, buffer = %s\n", i, len, buffer);
 
                 break;
 			}
+            buffer[i+1] = '\0';
 			len = strlen(buffer);
             //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
             strcpy(curr->text, buffer);
@@ -222,14 +225,14 @@ void look_for_symbol()
 
         else if(buffer[i] == '#')
         {
-            printf("hi '%s'\n", buffer);
-            fflush(stdout);
             fgets(buffer, 999, fp);
-            strcpy(curr->text, "skip");
-            printf("hi'%s'\n", curr->text);
+            //printf("cur text is '%s'\n", curr->text);
+            fflush(stdout);            
+            //strcpy(curr->text, "skip");
+            //printf("hi'%s'\n", curr->text);
             fflush(stdout);
             curr->line++;
-            curr->typ = skipsym;
+            //curr->typ = skipsym;
             break;
         }
 
@@ -249,20 +252,11 @@ extern token lexer_next()
     ret->line = curr->line;
 	int a = 0;
 	
-	// check for comment, if so skip to next line
-
 	// go until next token can be identified
-	//look_for_symbol(buffer, len, i);
     look_for_symbol();
     fflush(stdout);
 	// at this point, we have our next string without whitespace in, so we can use it to 
 	// identify what token we have
-
-	// if (strcmp(curr->text, "#") == 0)
-	// {
-	// 	fgets(buffer, 1000, fp);
-	// 	curr->line++;
-	// }
 	
     if (1)
     {
