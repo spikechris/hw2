@@ -38,6 +38,7 @@ extern void lexer_open(const char *fname)
 	curr = malloc(sizeof(token));
 
 	curr->filename = malloc(sizeof(char) * (length + 1));
+	strcpy(curr->filename, fname);
 
 	curr->text = malloc(sizeof(char) * 100); // I REVERSED THESE COMMENTS
     //curr->text = NULL;
