@@ -97,7 +97,47 @@ void look_for_symbol()
            	printf("BUFFER AT TOP is: --%s-- len = %d\n", buffer, len);
         //     printf("I is %d\n", i);
 
-		if (buffer[i] == ' ')
+        //ADDED TO GO BACKWARDS FOR , AND ;
+ 		if (buffer[i] == ',' || buffer[i] == ';' || buffer[i] == '.')
+		{
+            // means we need to get the token before that
+			if (i > 0)
+			{				
+                // in example 0, we need to get x
+				ungetc(buffer[i], fp);
+                //curr->column;
+
+                buffer[i] = '\0';
+                len = strlen(buffer);  
+                strcpy(curr->text, buffer);
+
+                //printf("IN I>0 i is %d, len = %d, buffer = %s\n", i, len, buffer);
+
+                break;
+			}
+            buffer[i+1] = '\0';
+			len = strlen(buffer);
+            //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
+            strcpy(curr->text, buffer);
+            buffer = '\0';
+			curr->column++;
+
+			// int k;
+			// for (k = 0; k < len-2; k++)
+			// {
+			// 	curr->text[k] = buffer[k];
+			// }
+            // strcpy(curr->text, buffer);
+            //curr->text[k] = '\0';
+
+           // printf("Curr text IN THE FINAL ELSEIF is: <%s>\n", curr->text);
+
+			//curr->line++;
+			//curr->column = 1;
+			break;
+		} 
+
+		else if (buffer[i] == ' ')
 		{
 			buffer[i] = '\0';
 			len = strlen(buffer);
@@ -122,8 +162,6 @@ void look_for_symbol()
 		
 		else if (buffer[i] == '\n')
 		{
-            if (i==0)
-                printf("i is 0\n");
             buffer[i] = '\0';
             // if (deb)
             // printf("(AT NEWLINE) buffer is: --%s-- \nlen = %d\n", buffer, len);
@@ -156,51 +194,17 @@ void look_for_symbol()
 			break;
 		}
 
-        //ADDED TO GO BACKWARDS FOR , AND ;
- 		else if (buffer[i] == ',' || buffer[i] == ';' || buffer[i] == '.')
-		{
-            // means we need to get the token before that
-			if (i > 0)
-			{				
-                // in example 0, we need to get x
-				ungetc(buffer[i], fp);
-                //curr->column;
-
-                buffer[i] = '\0';
-                len = strlen(buffer);  
-                strcpy(curr->text, buffer);
-
-                //printf("IN I>0 i is %d, len = %d, buffer = %s\n", i, len, buffer);
-
-                break;
-			}
-            buffer[i+1] = '\0';
-			len = strlen(buffer);
-            //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
-            strcpy(curr->text, buffer);
-			curr->column++;
-
-			// int k;
-			// for (k = 0; k < len-2; k++)
-			// {
-			// 	curr->text[k] = buffer[k];
-			// }
-            // strcpy(curr->text, buffer);
-            //curr->text[k] = '\0';
-
-           // printf("Curr text IN THE FINAL ELSEIF is: <%s>\n", curr->text);
-
-			//curr->line++;
-			//curr->column = 1;
-			break;
-		}       
+      
 
         else if(feof(fp))
         {
-            // if (curr->text != NULL)
-            //     free(curr->text);
+            if (i == 0)
+            {
+                curr->typ = eofsym;
+                strcpy(curr->text, buffer);
+                buffer[i] = '\0';
+            }
             break;
-            //printf("reached end of file\n");
 			if (i > 0)
 			{				
                 // in example 0, we need to get x
@@ -234,6 +238,7 @@ void look_for_symbol()
             fflush(stdout);
             curr->line++;
             //curr->typ = skipsym;
+            continue;
             break;
         }
 
@@ -426,7 +431,6 @@ extern token lexer_next()
             curr->typ = eofsym;
             // if (curr->text != NULL)
             //     free(curr->text);
-            //printf("eof\n");
             //strcpy(curr->text, "");
         }
         
