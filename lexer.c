@@ -7,10 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-// not sure to fix errors
-// #include "utilities.c"
-// #include "lexer_output.c"
-// #include "token.c"
 
 #define deb 0
 
@@ -79,8 +75,11 @@ extern bool lexer_done()
     // if the FILE pointer isn't open
  	if (fp == NULL)
 		return false;
+    else if (feof(fp))
+        return true;
     else
-        return (feof(fp));
+        return false;
+        
 }
 
 void look_for_symbol()
@@ -95,7 +94,6 @@ void look_for_symbol()
 		fscanf(fp, "%c", &buffer[i]);
 		if (deb)
            	printf("BUFFER AT TOP is: --%s-- len = %d\n", buffer, len);
-        // if (curr->column > 5 && curr->line < 3)
         //     printf("I is %d\n", i);
 
 		if (buffer[i] == ' ')
@@ -126,18 +124,13 @@ void look_for_symbol()
             buffer[i] = '\0';
             // if (deb)
             // printf("(AT NEWLINE) buffer is: --%s-- \nlen = %d\n", buffer, len);
-            //len = strlen(buffer);
 
-            curr->line++;
             curr->column = 1;
             i--;
-
-            
-
             // We have stuff to return from token new line
-            /*if (i>0)
+            if (i>0)
 			{
-                ungetc('', fp);
+                ungetc('\n', fp);
                 //printf("I is %d\n",i);
                 int k;
                 for (k = 0; k < len+1; k++)
@@ -145,7 +138,8 @@ void look_for_symbol()
                     curr->text[k] = buffer[k];
                 }
                 break;
-            }*/
+            }
+            curr->line++;
 
             continue;
             
@@ -199,6 +193,9 @@ void look_for_symbol()
 
         else if(feof(fp))
         {
+            // if (curr->text != NULL)
+            //     free(curr->text);
+            break;
             //printf("reached end of file\n");
 			if (i > 0)
 			{				
@@ -214,11 +211,25 @@ void look_for_symbol()
 
                 break;
 			}
+            
 			len = strlen(buffer);
             //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
             strcpy(curr->text, buffer);
 			curr->column++;
             curr->line++;
+            break;
+        }
+
+        else if(buffer[i] == '#')
+        {
+            printf("hi '%s'\n", buffer);
+            fflush(stdout);
+            fgets(buffer, 999, fp);
+            strcpy(curr->text, "skip");
+            printf("hi'%s'\n", curr->text);
+            fflush(stdout);
+            curr->line++;
+            curr->typ = skipsym;
             break;
         }
 
@@ -243,7 +254,7 @@ extern token lexer_next()
 	// go until next token can be identified
 	//look_for_symbol(buffer, len, i);
     look_for_symbol();
-
+    fflush(stdout);
 	// at this point, we have our next string without whitespace in, so we can use it to 
 	// identify what token we have
 
@@ -258,6 +269,11 @@ extern token lexer_next()
         if (strcmp(curr->text, ".") == 0) 
         {
             curr->typ = periodsym;
+        }
+
+        else if(curr->text[0] == '#')
+        {
+            curr->typ = skipsym;
         }
         
         else if (strcmp(curr->text, "const") == 0) 
@@ -413,6 +429,10 @@ extern token lexer_next()
         else if(feof(fp))
         {
             curr->typ = eofsym;
+            // if (curr->text != NULL)
+            //     free(curr->text);
+            //printf("eof\n");
+            //strcpy(curr->text, "");
         }
         
         // here we assume valid string such as "ab" "12" and "3c"
@@ -449,8 +469,13 @@ extern token lexer_next()
     }
 	ret->line = curr->line;
 	//ret->column = curr->column;
-	strcpy(ret->text, curr->text);
+    //if (curr->text != NULL)
+	    strcpy(ret->text, curr->text);
     ret->value = curr->value;
+    if (ret->typ == eofsym)
+    {
+        ret->text = '\0';
+    }
     //free(curr->text);
 	return *ret;
 }

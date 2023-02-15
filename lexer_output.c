@@ -27,6 +27,8 @@ static void lexer_print_token(token t)
 	{
 		if (t.text != NULL)
 		{
+			//if (t.typ == eofsym)
+			//printf("hioutput\n");
 	    	printf(" \"%s\"\n", t.text);
 		}
 		else
@@ -44,7 +46,7 @@ void lexer_output()
 	{
 		//printf("Iteration: %d\n", i);
 		//i++;
-		//fflush(stdout);		
+		fflush(stdout);		
 		token t = lexer_next();
 		lexer_print_token(t);
     }
