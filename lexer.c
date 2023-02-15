@@ -93,8 +93,10 @@ void look_for_symbol()
 	while (1)
 	{
 		fscanf(fp, "%c", &buffer[i]);
-			if (deb)
-            	printf("BUFFER AT TOP is: --%s-- len = %d\n", buffer, len);
+		if (deb)
+           	printf("BUFFER AT TOP is: --%s-- len = %d\n", buffer, len);
+        // if (curr->column > 5 && curr->line < 3)
+        //     printf("I is %d\n", i);
 
 		if (buffer[i] == ' ')
 		{
@@ -121,21 +123,39 @@ void look_for_symbol()
 		
 		else if (buffer[i] == '\n')
 		{
-			buffer[i] = '\0';
-			if (deb)
-            	printf("(AT NEWLINE) buffer is: --%s-- \nlen = %d\n", buffer, len);
-			len = strlen(buffer);
-			int k;
-			for (k = 0; k < len+1; k++)
+            buffer[i] = '\0';
+            // if (deb)
+            // printf("(AT NEWLINE) buffer is: --%s-- \nlen = %d\n", buffer, len);
+            //len = strlen(buffer);
+
+            curr->line++;
+            curr->column = 1;
+            i--;
+
+            
+
+            // We have stuff to return from token new line
+            /*if (i>0)
 			{
-				curr->text[k] = buffer[k];
-			}
+                ungetc('', fp);
+                //printf("I is %d\n",i);
+                int k;
+                for (k = 0; k < len+1; k++)
+                {
+                    curr->text[k] = buffer[k];
+                }
+                break;
+            }*/
+
+            continue;
+            
+            // it's just a new line, we continue
+            i--;
+            continue;
+
             // curr->text[k] = '\0';
             //printf("BUFFER text is: <%s>\n", buffer);
             // printf("Curr text is: <%s>\n", curr->text);
-
-			curr->line++;
-			curr->column = 1;
 			break;
 		}
 
@@ -147,7 +167,7 @@ void look_for_symbol()
 			{				
                 // in example 0, we need to get x
 				ungetc(';', fp);
-                curr->column;
+                //curr->column;
 
                 buffer[i] = '\0';
                 len = strlen(buffer);  
@@ -177,6 +197,31 @@ void look_for_symbol()
 			break;
 		}       
 
+        else if(feof(fp))
+        {
+            //printf("reached end of file\n");
+			if (i > 0)
+			{				
+                // in example 0, we need to get x
+				ungetc(';', fp);
+                curr->column;
+                curr->line--;
+                buffer[i] = '\0';
+                len = strlen(buffer);  
+                strcpy(curr->text, buffer);
+
+                //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
+
+                break;
+			}
+			len = strlen(buffer);
+            //printf("i is %d, len = %d, buffer = %s\n", i, len, buffer);
+            strcpy(curr->text, buffer);
+			curr->column++;
+            curr->line++;
+            break;
+        }
+
 		curr->column++;
 		i++;
 	}
@@ -189,7 +234,8 @@ extern token lexer_next()
 {
 	token *ret;
 	ret = malloc(sizeof(token));
-    ret->column = curr->column; // SHUOLD BE 0
+    ret->column = curr->column; // SHUOLD BE 1
+    ret->line = curr->line;
 	int a = 0;
 	
 	// check for comment, if so skip to next line
@@ -314,18 +360,6 @@ extern token lexer_next()
             curr->typ = rparensym;
         }
         
-        // ****
-        else if (strcmp(curr->text, ")") == 0) 
-        {
-            curr->typ = identsym;
-        }
-        
-        // WHAT TO PUT FOR HERE?
-        else if (strcmp(curr->text, ")") == 0) 
-        {
-            curr->typ = numbersym;
-        }
-        
         else if (strcmp(curr->text, "=") == 0) 
         {
             curr->typ = eqsym;
@@ -375,6 +409,11 @@ extern token lexer_next()
         {
             curr->typ = divsym;
         }
+
+        else if(feof(fp))
+        {
+            curr->typ = eofsym;
+        }
         
         // here we assume valid string such as "ab" "12" and "3c"
         else
@@ -382,10 +421,11 @@ extern token lexer_next()
             a = atoi(curr->text);
             if (a != 0) // CHANGED FROM NULL BUT CHANGE LATER
             {
-                if (a > SHRT_MAX)
+                if (a < SHRT_MAX)
                     curr->value = a;
                 curr->typ = numbersym;
-				
+				curr->value = a;
+                
                 // ELSE ERROR
             }
             else
@@ -399,10 +439,18 @@ extern token lexer_next()
 
 	ret->text = malloc (sizeof(char) * (len2 + 1));
     ret->typ = curr->typ;
+    //if (ret->typ == identsym)
+        //printf("RET: %d\n", ret->column);
+    //if (ret->line == )
+    if (curr->line > ret->line)
+    {
+        //printf("curr line = %d ret line = %d\n", curr->line, ret->line);
+        ret->column = 1;
+    }
 	ret->line = curr->line;
 	//ret->column = curr->column;
 	strcpy(ret->text, curr->text);
-
+    ret->value = curr->value;
     //free(curr->text);
 	return *ret;
 }

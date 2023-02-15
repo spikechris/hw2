@@ -24,7 +24,7 @@ typedef struct token {
     unsigned int line;
     unsigned int column;
     char *text; // non-NULL, if applicable
-    short int value; // when typ==numbersym, its value
+     int value; // when typ==numbersym, its value
 } token;
 
 // Return the name of the token_type enum
